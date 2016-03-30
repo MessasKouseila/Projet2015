@@ -1,5 +1,7 @@
 package fr.univavignon.courbes.inter.simpleimpl.profiles;
 
+import java.awt.List;
+
 /*
  * Courbes
  * Copyright 2015-16 L3 Info UAPV 2015-16
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -69,8 +72,13 @@ public class ProfileManager
 	 * 		Utilisateur à rajouter.
 	 */
 	public static void addProfile(Profile profile)
-	{	Profile mx = Collections.max(PROFILES);
-		profile.profileId = mx.profileId + 1;
+	{	if(PROFILES.isEmpty())
+			profile.profileId = 0;
+		else
+		{	Profile mx = Collections.max(PROFILES);
+			profile.profileId = mx.profileId + 1;
+		}
+		
 		PROFILES.add(profile);
 		recordProfiles();
 	}
@@ -82,7 +90,8 @@ public class ProfileManager
 	 * 		Le profil à supprimer.
 	 */
 	public static void removeProfile(Profile profile)
-	{	PROFILES.remove(profile);
+	{	
+		PROFILES.remove(profile);
 		recordProfiles();
 	}
 	
@@ -105,6 +114,30 @@ public class ProfileManager
 					profile.email + SEPARATOR +
 					profile.password + "\n"
 				);
+			}
+			writer.flush();
+			writer.close();
+		}
+		catch (IOException e)
+		{	e.printStackTrace();
+		}
+	}
+	
+	private static void insertProfiles(java.util.List<Profile> p)
+	{	try
+		{	FileOutputStream fos = new FileOutputStream(PROFILE_FILE);
+			OutputStreamWriter osw = new OutputStreamWriter(fos);
+			PrintWriter writer = new PrintWriter(osw);
+			
+			for(Profile profile: p)
+			{	writer.write
+				(	profile.userName + SEPARATOR + 
+					profile.country + SEPARATOR +
+					profile.eloRank + SEPARATOR +
+					profile.email + SEPARATOR +
+					profile.password + "\n"
+				);
+			
 			}
 			writer.flush();
 			writer.close();
@@ -171,7 +204,59 @@ public class ProfileManager
 		{	Profile profile = it.next();
 			found = userName.equalsIgnoreCase(profile.userName);
 		}
-		return false;
+		return found;
+	}
+	
+	public static String containsUserNamePassword(String userName)
+	{	boolean found = false;
+		String password = "null";
+		Iterator<Profile> it = PROFILES.iterator();
+		while(!found && it.hasNext())
+		{	Profile profile = it.next();
+			found = userName.equalsIgnoreCase(profile.userName);
+			if(found)
+				password = profile.password;
+		}
+		return password;
+	}
+	
+	public static void editProfiles(String username,String password,int elo)
+	{	try
+		{	// on ouvre le fichier en lecture
+			FileInputStream fis = new FileInputStream(PROFILE_FILE);
+			InputStreamReader isr = new InputStreamReader(fis);
+			Scanner scanner = new Scanner(isr);
+			java.util.List<Profile> p = new ArrayList<>();
+			int profileId = 0;
+			// on en lit chaque ligne
+			while(scanner.hasNext())
+			{	String line = scanner.nextLine();
+				String elem[] = line.split(SEPARATOR);
+				if(elem.length == PROFILE_FIELD_NBR)
+				{	// on crée le profil et on l'initialise
+					Profile profile = new Profile();
+					profile.profileId = profileId;
+					profile.userName = elem[0].trim();
+					profile.country = elem[1].trim();
+					profile.eloRank = Integer.parseInt(elem[2].trim());
+					profile.email = elem[3].trim();
+					if(elem[0].trim().equals(username)){
+						profile.password = password;
+						profile.eloRank = elo;
+					}else
+						profile.password = elem[4].trim();
+					
+					p.add(profile);
+				}
+				profileId++;
+			}
+			insertProfiles(p);
+			// on ferme le fichier
+			scanner.close();  
+		}
+		catch (IOException e)
+		{	e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -193,4 +278,5 @@ public class ProfileManager
 		}
 		return result;
 	}
+	   
 }

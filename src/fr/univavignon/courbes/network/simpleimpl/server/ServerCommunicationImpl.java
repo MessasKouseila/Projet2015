@@ -55,6 +55,7 @@ public class ServerCommunicationImpl implements ServerCommunication, Runnable
 	////	ADRESSE IP
 	////////////////////////////////////////////////////////////////
 	/** Variable qui contient l'adresse ip de ce serveur */
+	//private String ip = "10.188.55.88";
 	private String ip = null;
 	
 	@Override
@@ -68,8 +69,12 @@ public class ServerCommunicationImpl implements ServerCommunication, Runnable
 					while(ias.hasMoreElements() && ip==null)
 					{	InetAddress ia = ias.nextElement();
 						String iaStr = ia.getHostAddress();
-						if(iaStr.startsWith("192.168.") || iaStr.startsWith("10.104.") || iaStr.startsWith("194.57."))
+						int i = 0;
+						while(ip==null && i<Constants.IP_PREFIXES.length)
+						{	if(iaStr.startsWith(Constants.IP_PREFIXES[i]))
 								ip = iaStr;
+							i++;
+						}
 					}
 				}
 			}
@@ -463,6 +468,14 @@ public class ServerCommunicationImpl implements ServerCommunication, Runnable
 		return result;
 	}
 	
+	@Override
+	public synchronized void finalizeRound()
+	{	
+//		while(serverCom.retrieveCommands()!=null);
+		for(ServerReadRunnable srr: srrs)
+			srr.directions.clear();
+	}
+
 	////////////////////////////////////////////////////////////////
 	////	SORTIES
 	////////////////////////////////////////////////////////////////

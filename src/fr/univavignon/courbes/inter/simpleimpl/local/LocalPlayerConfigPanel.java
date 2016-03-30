@@ -28,12 +28,17 @@ import java.util.Vector;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 import fr.univavignon.courbes.common.Constants;
 import fr.univavignon.courbes.common.Player;
 import fr.univavignon.courbes.common.Profile;
+import fr.univavignon.courbes.inter.simpleimpl.MainWindow;
 import fr.univavignon.courbes.inter.simpleimpl.profiles.ProfileManager;
 
 /**
@@ -43,7 +48,14 @@ import fr.univavignon.courbes.inter.simpleimpl.profiles.ProfileManager;
  * @author	L3 Info UAPV 2015-16
  */
 public class LocalPlayerConfigPanel extends JPanel implements ActionListener, KeyListener
-{	/** Numéro de série de la classe */
+{	
+	//Manque de commantaire
+	JTextField  tfUser=new JTextField();
+	JPasswordField pfPassword=new JPasswordField();
+	JCheckBox pfcheckbox=new JCheckBox();
+	Object[] list={"password",pfPassword,"se souvenir",pfcheckbox};
+//Manque de commantaire
+	/** Numéro de série de la classe */
 	private static final long serialVersionUID = 1L;
 	/** Ensemble de touches prédéfinies */
 	private static final int[][] PREDEFINED_KEYS = 
@@ -90,7 +102,7 @@ public class LocalPlayerConfigPanel extends JPanel implements ActionListener, Ke
 		setLayout(layout);
 		int height = 30;
 		Dimension dim;
-		
+
 		playerSelectorCombo = new JComboBox<Profile>(availableProfiles);
 		playerSelectorCombo.setSelectedItem(player.profile);
 		playerSelectorCombo.addActionListener(this);
@@ -136,7 +148,9 @@ public class LocalPlayerConfigPanel extends JPanel implements ActionListener, Ke
 		
 		availableProfiles = new Vector<Profile>(ProfileManager.getProfiles());
 		int index = configPanel.selectedProfiles.size();
-		player.profile = availableProfiles.get(Math.min(index,availableProfiles.size()-1));
+		if(!configPanel.mainWindow.serverCentralCom.isGamePublic() || !configPanel.mainWindow.serverCentralCom.isGameDirect())
+			player.profile = availableProfiles.get(Math.min(index,availableProfiles.size()-1));
+		
 		player.playerId = index;
 		
 		player.local = true;
@@ -162,7 +176,78 @@ public class LocalPlayerConfigPanel extends JPanel implements ActionListener, Ke
 	public void actionPerformed(ActionEvent e)
 	{	if(e.getSource()==playerSelectorCombo)
 		{	Profile profile = (Profile)playerSelectorCombo.getSelectedItem();
+			
 			player.profile = profile;
+			if(configPanel.mainWindow.serverCentralCom.isGamePublic() || configPanel.mainWindow.serverCentralCom.isGameDirect()){
+				String password = ProfileManager.containsUserNamePassword(profile.userName);
+				if(password.equals("null")){
+					if(0==JOptionPane.showOptionDialog(null, list, "login", JOptionPane.OK_CANCEL_OPTION,JOptionPane.INFORMATION_MESSAGE,null,new String[]{"Se connecter", "Annuler"},null)){
+						Player connexion = configPanel.mainWindow.serverCentralCom.loginPlayer(profile.userName, pfPassword.getText());
+							if(connexion != null){
+								playerSelectorCombo.setSelectedItem(playerSelectorCombo.getSelectedItem());
+								if(pfcheckbox.isSelected())
+									ProfileManager.editProfiles(profile.userName, pfPassword.getText(),connexion.profile.eloRank);
+								else
+									ProfileManager.editProfiles(profile.userName, "null",connexion.profile.eloRank);
+							}
+							else{
+								playerSelectorCombo.setSelectedItem(null);
+							}
+					
+						
+					}else{
+						playerSelectorCombo.setSelectedItem(null);
+					}
+				}else{
+					Player connexion = configPanel.mainWindow.serverCentralCom.loginPlayer(profile.userName, password);
+					if(connexion != null){
+						playerSelectorCombo.setSelectedItem(playerSelectorCombo.getSelectedItem());
+						ProfileManager.editProfiles(profile.userName, "null",connexion.profile.eloRank);
+					}else{
+						playerSelectorCombo.setSelectedItem(null);
+						if(0==JOptionPane.showOptionDialog(null, list, "login", JOptionPane.OK_CANCEL_OPTION,JOptionPane.INFORMATION_MESSAGE,null,new String[]{"Se connecter", "Annuler"},null)){
+							connexion = configPanel.mainWindow.serverCentralCom.loginPlayer(profile.userName, pfPassword.getText());
+								if(connexion != null){
+									playerSelectorCombo.setSelectedItem(playerSelectorCombo.getSelectedItem());
+									if(pfcheckbox.isSelected())
+										ProfileManager.editProfiles(profile.userName, pfPassword.getText(),connexion.profile.eloRank);
+									else
+										ProfileManager.editProfiles(profile.userName, "null",connexion.profile.eloRank);
+								}
+								else{
+									playerSelectorCombo.setSelectedItem(null);
+								}
+						
+							
+						}else{
+							playerSelectorCombo.setSelectedItem(null);
+						}
+						
+					}
+				}
+				/*	
+				
+				
+				
+				
+				if(0==JOptionPane.showOptionDialog(null, list, "login", JOptionPane.OK_CANCEL_OPTION,JOptionPane.INFORMATION_MESSAGE,null,new String[]{"Se connecter", "Annuler"},null)){
+					Player connexion = configPanel.mainWindow.serverCentralCom.loginPlayer(profile.userName, pfPassword.getText());
+						if(connexion != null){
+							playerSelectorCombo.setSelectedItem(playerSelectorCombo.getSelectedItem());
+							if(pfcheckbox.isSelected())
+								ProfileManager.editProfiles(profile.userName, pfPassword.getText());
+						}
+						else{
+							playerSelectorCombo.setSelectedItem(null);
+						}
+				
+					
+				}else{
+					playerSelectorCombo.setSelectedItem(null);
+				}*/
+				
+				
+			}
 		}
 	
 		else if(e.getSource()==leftButton)

@@ -29,9 +29,11 @@ import javax.swing.JPanel;
 
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow;
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow.PanelName;
+import fr.univavignon.courbes.inter.simpleimpl.SettingsManager.NetEngineImpl;
 import fr.univavignon.courbes.inter.simpleimpl.SettingsManager;
 import fr.univavignon.courbes.inter.simpleimpl.remote.AbstractConnectionPanel;
 import fr.univavignon.courbes.network.ServerCommunication;
+import fr.univavignon.courbes.network.kryonet.ServerCommunicationKryonetImpl;
 import fr.univavignon.courbes.network.simpleimpl.server.ServerCommunicationImpl;
 
 /**
@@ -66,7 +68,15 @@ public class ServerGamePortSelectionPanel extends AbstractConnectionPanel implem
 	{	// initialisation de la connexion
 		ServerCommunication serverCom = mainWindow.serverCom;
 		if(serverCom==null)
-		{	serverCom = new ServerCommunicationImpl();
+		{	NetEngineImpl netEngineImpl = SettingsManager.getNetEngineImpl();
+			switch(netEngineImpl)
+			{	case KRYONET:
+					serverCom = new ServerCommunicationKryonetImpl();
+					break;
+				case SOCKET:
+					serverCom = new ServerCommunicationImpl();
+					break;
+			}
 			mainWindow.serverCom = serverCom;
 			serverCom.setErrorHandler(mainWindow);
 		}
@@ -100,6 +110,8 @@ public class ServerGamePortSelectionPanel extends AbstractConnectionPanel implem
 		panel.add(publicLabel);
 		
 		publicBox = new JCheckBox();
+		if(mainWindow.serverCentralCom.isGamePublic())
+			publicBox.setSelected(true);
 		publicBox.addItemListener(this);
 		panel.add(publicBox);
 		
@@ -118,7 +130,6 @@ public class ServerGamePortSelectionPanel extends AbstractConnectionPanel implem
 		int port = Integer.parseInt(portStr);
 		SettingsManager.setLastPort(port);
 		mainWindow.serverCom.setPort(port);
-	
 		mainWindow.displayPanel(PanelName.SERVER_GAME_LOCAL_PLAYER_SELECTION);
 	}
 
@@ -138,6 +149,15 @@ public class ServerGamePortSelectionPanel extends AbstractConnectionPanel implem
 	public void itemStateChanged(ItemEvent e)
 	{	if(e.getSource()==publicBox)
 		{	System.out.println("Modification de la JCheckBox: "+publicBox.isSelected());
+			if(publicBox.isSelected()){
+				mainWindow.serverCentralCom.setGamePublic(true);
+				mainWindow.serverCentralCom.setIpServer(mainWindow.serverCom.getIp());
+				mainWindow.serverCentralCom.setPort(Integer.parseInt(portTextField.getText()));
+			}else{
+				mainWindow.serverCentralCom.setGamePublic(false);
+				mainWindow.serverCentralCom.deleteServer();
+			}
+			//mainWindow.serverCentralCom.signUpServer(playersNumber, completed)
 			// TODO à compléter avec le traitement relatif au serveur central...
 		}
 	}

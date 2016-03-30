@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow.PanelName;
 import fr.univavignon.courbes.inter.simpleimpl.profiles.ProfileManager;
+import fr.univavignon.courbes.sounds.Sound;
 
 /**
  * Panel contenant le menu principal du jeu.
@@ -190,5 +191,6 @@ public class MainMenuPanel extends JPanel implements ActionListener
 		else if(e.getSource()==quitButton)
 		{	mainWindow.closeWindow();
 		}
+		Sound.ClickButton.play();
 	}
 }

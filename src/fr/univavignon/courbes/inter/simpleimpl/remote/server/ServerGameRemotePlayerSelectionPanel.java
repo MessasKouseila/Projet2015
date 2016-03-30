@@ -38,10 +38,13 @@ import fr.univavignon.courbes.common.Round;
 import fr.univavignon.courbes.inter.ServerProfileHandler;
 import fr.univavignon.courbes.inter.simpleimpl.AbstractPlayerSelectionPanel;
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow;
+import fr.univavignon.courbes.inter.simpleimpl.SettingsManager;
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow.PanelName;
+import fr.univavignon.courbes.inter.simpleimpl.SettingsManager.NetEngineImpl;
 import fr.univavignon.courbes.inter.simpleimpl.remote.RemotePlayerConfigPanel;
 import fr.univavignon.courbes.inter.simpleimpl.remote.RemotePlayerSelectionPanel;
 import fr.univavignon.courbes.network.ServerCommunication;
+import fr.univavignon.courbes.network.kryonet.ServerCommunicationKryonetImpl;
 import fr.univavignon.courbes.network.simpleimpl.server.ServerCommunicationImpl;
 
 /**
@@ -68,7 +71,8 @@ public class ServerGameRemotePlayerSelectionPanel extends AbstractPlayerSelectio
 	 */
 	public ServerGameRemotePlayerSelectionPanel(MainWindow mainWindow)
 	{	super(mainWindow,TITLE);
-		
+		if(mainWindow.serverCentralCom.isGamePublic())
+			mainWindow.serverCentralCom.signUpServer((int)playerNbrCombo.getSelectedItem(), 1);
 		initServer();
 	}
 	
@@ -175,7 +179,16 @@ public class ServerGameRemotePlayerSelectionPanel extends AbstractPlayerSelectio
 	 * Initialise la partie serveur du moteur réseau
 	 */
 	private void initServer()
-	{	serverCom = new ServerCommunicationImpl();
+	{	NetEngineImpl netEngineImpl = SettingsManager.getNetEngineImpl();
+		switch(netEngineImpl)
+		{	case KRYONET:
+				serverCom = new ServerCommunicationKryonetImpl();
+				break;
+			case SOCKET:
+				serverCom = new ServerCommunicationImpl();
+				break;
+		}
+		
 		serverCom.setErrorHandler(mainWindow);
 		serverCom.setProfileHandler(this);
 		serverCom.launchServer();
@@ -217,7 +230,6 @@ public class ServerGameRemotePlayerSelectionPanel extends AbstractPlayerSelectio
 	{	RemotePlayerConfigPanel lps = new RemotePlayerConfigPanel(this,true);
 		selectedProfiles.add(lps);
 		playersPanel.add(lps);
-		
 		validate();
 		repaint();
 	}
@@ -315,6 +327,8 @@ public class ServerGameRemotePlayerSelectionPanel extends AbstractPlayerSelectio
 	{	serverCom.closeServer();
 		mainWindow.serverCom = null;
 		mainWindow.displayPanel(PanelName.SERVER_GAME_LOCAL_PLAYER_SELECTION);
+		if(mainWindow.serverCentralCom.isGamePublic())
+			mainWindow.serverCentralCom.deleteServer();
 	}
 	
 	/**
@@ -364,6 +378,8 @@ public class ServerGameRemotePlayerSelectionPanel extends AbstractPlayerSelectio
 		// on prévient les clients
 		Profile profiles[] = getAllPlayers();
 		serverCom.sendProfiles(profiles);
+		if(mainWindow.serverCentralCom.isGamePublic())
+			mainWindow.serverCentralCom.signUpServer((int)playerNbrCombo.getSelectedItem(), 1);
 	}
 
 	@Override

@@ -173,7 +173,10 @@ public class ClientGameWaitPanel extends AbstractConfigurationPanel implements R
 	protected void previousStep()
 	{	mainWindow.clientCom.closeClient();
 		mainWindow.clientCom.setProfileHandler(null);
-		mainWindow.displayPanel(PanelName.CLIENT_GAME_CONNECTION);
+		if(!mainWindow.serverCentralCom.isGameDirect()){
+			mainWindow.displayPanel(PanelName.CLIENT_GAME_WAIT_CENTRAL);
+		}else
+			mainWindow.displayPanel(PanelName.CLIENT_GAME_CONNECTION);
 	}
 	
 	@Override
@@ -239,7 +242,11 @@ public class ClientGameWaitPanel extends AbstractConfigurationPanel implements R
 
 	@Override
 	public void gotKicked()
-	{	//ce thread est exécuté plus tard par Swing, ce qui rend cette méthode non-bloquante pour le moteur réseau
+	{	
+		if(!mainWindow.serverCentralCom.isGamePublic())
+			mainWindow.serverCentralCom.serverRejected.put(mainWindow.serverCentralCom.getIpServer(), "f");
+		mainWindow.serverCentralCom.deletePlayerServer();
+		//ce thread est exécuté plus tard par Swing, ce qui rend cette méthode non-bloquante pour le moteur réseau
 		SwingUtilities.invokeLater(new Runnable()
 		{	@Override
 			public void run()
@@ -258,7 +265,11 @@ public class ClientGameWaitPanel extends AbstractConfigurationPanel implements R
 
 	@Override
 	public void connectionLost()
-	{	SwingUtilities.invokeLater(new Runnable()
+	{	
+		if(!mainWindow.serverCentralCom.isGamePublic())
+			mainWindow.serverCentralCom.serverRejected.put(mainWindow.serverCentralCom.getIpServer(), "f");
+		mainWindow.serverCentralCom.deletePlayerServer();
+		SwingUtilities.invokeLater(new Runnable()
 		{	@Override
 			public void run()
 			{	JOptionPane.showMessageDialog(mainWindow, 

@@ -33,6 +33,7 @@ import fr.univavignon.courbes.common.ItemInstance;
 import fr.univavignon.courbes.common.Position;
 import fr.univavignon.courbes.common.Snake;
 import fr.univavignon.courbes.inter.simpleimpl.SettingsManager;
+import fr.univavignon.courbes.sounds.Sound;
 
 /**
  * Classe fille de {@link Snake}, permettant d'intégrer
@@ -86,6 +87,11 @@ public class PhysSnake extends Snake
 		
 		currentItems = new LinkedList<ItemInstance>();
 	}
+	
+	/**
+	 * Empty constructor used for Kryonet network
+	 */
+	public PhysSnake(){}
 
 	/**
 	 * Crée le serpent associé au numéro indiqué, pour le profil
@@ -222,7 +228,10 @@ public class PhysSnake extends Snake
 		{	PhysItemInstance item = (PhysItemInstance)it.next();
 			boolean remove = item.updateEffect(elapsedTime,this);
 			if(remove)
+			{
 				it.remove();
+				Sound.EffectEnded.play(); // Lance le son correspondant
+			}
 		}
 	}
 	
@@ -370,6 +379,8 @@ public class PhysSnake extends Snake
 						board.removedItems.add(item.itemId);
 						// on le ramasse
 						item.pickUp(board,this);
+						// on lance le son correspondant
+						Sound.ItemCollision.play();
 					}
 				}
 			}
@@ -389,6 +400,8 @@ public class PhysSnake extends Snake
 					result = true;
 					// on restreint la nouvelle position du serpent
 					it.remove();
+					// Lance le son de collision
+					Sound.DeathCollision.play();
 				}
 			}
 		}
@@ -404,6 +417,8 @@ public class PhysSnake extends Snake
 					if(changed)
 					{	eliminatedBy = i;
 						result = true;
+						// Lance le son de collision
+						Sound.DeathCollision.play();
 					}
 				}
 				i++;

@@ -1,6 +1,4 @@
-Leroy,USA,6,leroy@fake.com,password1
-Kvothe,France,5,kvothe@fake.com,password2
-Fitz,Angleterre,1,fitz@fake.com,password3
-Test,France,3,test@fake.com,password4
-Toto,France,2,toto@fake.com,password5
-Zaza,France,4,zaza@fake.com,password6
+mickael,France,806,none@gmail.com,null
+hicham,Maroc,792,none@gmail.com,null
+aghiles,France,800,none@gmail.com,null
+kousseila,France,802,none@gmail.com,null

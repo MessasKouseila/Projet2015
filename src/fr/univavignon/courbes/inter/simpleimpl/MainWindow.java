@@ -24,16 +24,20 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import fr.univavignon.courbes.common.Player;
 import fr.univavignon.courbes.common.Round;
 import fr.univavignon.courbes.inter.ErrorHandler;
+import fr.univavignon.courbes.inter.central.ClientSelectionServerPanel;
 import fr.univavignon.courbes.inter.simpleimpl.local.LocalGamePlayerSelectionPanel;
 import fr.univavignon.courbes.inter.simpleimpl.local.LocalGameRoundPanel;
 import fr.univavignon.courbes.inter.simpleimpl.profiles.ProfileListPanel;
@@ -45,8 +49,13 @@ import fr.univavignon.courbes.inter.simpleimpl.remote.server.ServerGameLocalPlay
 import fr.univavignon.courbes.inter.simpleimpl.remote.server.ServerGamePortSelectionPanel;
 import fr.univavignon.courbes.inter.simpleimpl.remote.server.ServerGameRemotePlayerSelectionPanel;
 import fr.univavignon.courbes.inter.simpleimpl.remote.server.ServerGameRoundPanel;
+import fr.univavignon.courbes.inter.stats.ChartProfilesPanel;
+import fr.univavignon.courbes.inter.stats.TableStatisticPanel;
 import fr.univavignon.courbes.network.ClientCommunication;
 import fr.univavignon.courbes.network.ServerCommunication;
+import fr.univavignon.courbes.network.central.ServerCentralCommunication;
+import fr.univavignon.courbes.network.central.StatCentralCommunication;
+import fr.univavignon.courbes.sounds.Sound;
 
 /**
  * Menu principal du jeu.
@@ -60,13 +69,28 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 	private static final String GAME_NAME = "Courbes";
 	/** Version du jeu */
 	private static final String GAME_VERSION = "1";
-	
+	//Manque de commantaire
+			JTextField  tfUser=new JTextField();
+			JPasswordField pfPassword=new JPasswordField();
+			Object[] list={"user",tfUser,"password",pfPassword};
+		//Manque de commantaire
+	/**
+	 * Initialise le serveur central.
+	 */
+	private void initServerCentral(){
+		if(serverCentralCom==null)
+			serverCentralCom = new ServerCentralCommunication(this);
+		
+		
+		if(serverCentralStat == null)
+			serverCentralStat = new StatCentralCommunication(this);
+	}
 	/**
 	 * Crée le menu principal et tous ses composants graphiques.
 	 */
 	public MainWindow()
 	{	super();
-		
+		initServerCentral();//Ajouter par Groupe
 		initWindow();
 	}
 	
@@ -80,8 +104,14 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 	public ServerCommunication serverCom;
 	/** Moteur réseau actuellement utilisé par le client */
 	public ClientCommunication clientCom;
+	/** Moteur réseau Central */
+	public ServerCentralCommunication serverCentralCom;
+	/** Moteur réseau Central stats */
+	public StatCentralCommunication serverCentralStat;
 	/** Joueur sélectionné côté client pour participer à une partie réseau */
 	public Player clientPlayer;
+	/** Données correspondant aux joueurs selectionnés dans la table des statistiques **/
+	public List<List<Object>> rowsChecked;
 	
 	/**
 	 * Initialise la fenêtre.
@@ -104,9 +134,9 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 		int windowWidth = SettingsManager.getWindowWidth();
 		Dimension dim = new Dimension(windowWidth,windowHeight);
 		setPreferredSize(dim);
-		setMinimumSize(dim);
-		setMaximumSize(dim);
-		setResizable(false);
+		//setMinimumSize(dim);
+		//setMaximumSize(dim);
+		setResizable(true);
 		
 		mainMenuPanel = new MainMenuPanel(this);
 		currentPanel = mainMenuPanel;
@@ -131,6 +161,8 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 		
 		// on ferme la fenêtre
 		dispose();
+		if(serverCentralCom.isGamePublic())
+			serverCentralCom.deleteServer();
 		System.exit(0);
 	}
 
@@ -165,11 +197,14 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 		CLIENT_GAME_WAIT,
 		/** Aire de jeu d'une partie réseau côté client */
 		CLIENT_GAME_PLAY,
-		
+		/** Attente d'un serveur central  */
+		CLIENT_GAME_WAIT_CENTRAL,
 		/** Liste des profils */
 		PROFILE_LIST,
 		/** Affichage des statistiques */
-		STATISTICS;
+		STATISTICS,
+		/** Affichage des diagrammes liés aux statistiques **/
+		CHARTS_PROFILES;
 	}
 	
 	/**
@@ -183,14 +218,28 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 		switch(panelName)
 		{	case MAIN_MENU:
 				currentPanel = mainMenuPanel;
+				if(Sound.MusicInGame.isPlaying())
+					Sound.MusicInGame.stop(true);
 				break;
 			case LOCAL_GAME_PLAYER_SELECTION:
+				serverCentralCom.setGamePublic(false);
 				currentPanel = new LocalGamePlayerSelectionPanel(this);
+				
 				break;
 			case LOCAL_GAME_PLAY:
 				currentPanel = new LocalGameRoundPanel(this);
 				break;
 			case SERVER_GAME_PORT_SELECTION:
+				/*if(serverCentralCom.getPlayer() == null){
+					if(0==JOptionPane.showOptionDialog(null, list, "login", JOptionPane.OK_CANCEL_OPTION,JOptionPane.INFORMATION_MESSAGE,null,new String[]{"Se connecter", "Annuler"},null)){
+						Player connexion = serverCentralCom.loginPlayer(tfUser.getText(), pfPassword.getText());
+						if(connexion != null){
+							currentPanel = new ServerGamePortSelectionPanel(this);
+							//serverCentralCom.setUsername(tfUser.getText());
+						}
+					}
+				}else
+				currentPanel = new ServerGamePortSelectionPanel(this);*/
 				currentPanel = new ServerGamePortSelectionPanel(this);
 				break;
 			case SERVER_GAME_LOCAL_PLAYER_SELECTION:
@@ -206,6 +255,16 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 				currentPanel = new ClientGameServerConnectionPanel(this);
 				break;
 			case CLIENT_GAME_PLAYER_SELECTION:
+				/*if(serverCentralCom.getPlayer() == null){
+					if(0==JOptionPane.showOptionDialog(null, list, "login", JOptionPane.OK_CANCEL_OPTION,JOptionPane.INFORMATION_MESSAGE,null,new String[]{"Se connecter", "Annuler"},null)){
+						Player connexion = serverCentralCom.loginPlayer(tfUser.getText(), pfPassword.getText());
+						if(connexion != null){
+							currentPanel = new ClientGamePlayerSelectionPanel(this);
+							//serverCentralCom.setUsername(tfUser.getText());
+						}
+					}
+				}else
+				currentPanel = new ClientGamePlayerSelectionPanel(this);*/
 				currentPanel = new ClientGamePlayerSelectionPanel(this);
 				break;
 			case CLIENT_GAME_WAIT:
@@ -218,9 +277,14 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 				currentPanel = new ProfileListPanel(this);
 				break;
 			case STATISTICS:
-				System.out.println("Option pas encore implémentée...");
-				// TODO à compléter
-				// currentPanel = new XxxxxxPanel(this);
+				currentPanel = new TableStatisticPanel(this);
+				break;
+			case CHARTS_PROFILES:
+				currentPanel = new ChartProfilesPanel(this);
+				break;
+			case CLIENT_GAME_WAIT_CENTRAL:
+				currentPanel = new ClientSelectionServerPanel(this);
+				System.out.println("affichage de la page, attente du serveur...");
 				break;
 		}
 		
@@ -250,6 +314,17 @@ public class MainWindow extends JFrame implements ErrorHandler, WindowListener
 			public void run()
 			{	JOptionPane.showMessageDialog(window, errorMessage, "Erreur", JOptionPane.WARNING_MESSAGE);
 				System.out.println("ERROR: "+errorMessage);
+			}
+		});
+	}
+	
+	public void displayNotification(final String errorMessage)
+	{	final MainWindow window = this;
+		SwingUtilities.invokeLater(new Runnable()
+		{	@Override
+			public void run()
+			{	JOptionPane.showMessageDialog(window, errorMessage, "Notification", JOptionPane.INFORMATION_MESSAGE);
+				System.out.println("NOTIFICATION: "+errorMessage);
 			}
 		});
 	}

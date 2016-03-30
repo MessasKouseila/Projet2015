@@ -159,6 +159,23 @@ public abstract class AbstractRoundPanel extends JPanel implements Runnable
 			{	Profile profile = players[maxIdx].profile;
 				String name = profile.userName;
 				JOptionPane.showMessageDialog(mainWindow, "Le joueur "+name+"a gagné la partie !");
+				// Crée les données des résultats par ordre décroissant
+				int[] cPoints = totalPoints.clone();
+				String[][] dataResults = new String[players.length][2];
+				for(int i=0; i<players.length; i++){
+					int maxScore = -1;
+					int idMax = -1;
+					for(int j=0; j<players.length; j++) {
+						if(cPoints[j] > maxScore) {
+							maxScore = cPoints[j];
+							idMax = j;
+						}
+					}
+					dataResults[i][0] = players[idMax].profile.userName;
+					dataResults[i][1] = Integer.toString(cPoints[idMax]);
+					cPoints[idMax] = -1;
+				}
+				mainWindow.serverCentralStat.sendGameStatistics(dataResults); // Envoit les données au serveur central
 			}
 			
 			// ou bien celui de la manche, et on recommence
@@ -171,7 +188,7 @@ public abstract class AbstractRoundPanel extends JPanel implements Runnable
 				Profile profile = players[maxIdx2].profile;
 				String name = profile.userName;
 				JOptionPane.showMessageDialog(mainWindow, "Le joueur "+name+" a gagné la manche !");
-				
+	
 				resetRound();
 			}
 		}
@@ -198,16 +215,18 @@ public abstract class AbstractRoundPanel extends JPanel implements Runnable
 	protected boolean updatePoints(List<Integer> prevEliminated, List<Integer> lastEliminated)
 	{	boolean result = false;
 		
+		Player[] players = round.players;
+		int refScores[] = Constants.POINTS_FOR_RANK.get(players.length);
+		
 		if(!lastEliminated.isEmpty())
 		{	prevEliminated.addAll(lastEliminated);
-			Player[] players = round.players;
 			
 			// points de ceux qui ont déjà été éliminés
 			int rank = players.length;
 			for(int i=0;i<prevEliminated.size();i++)
 			{	int playerId = prevEliminated.get(i);
 				Player player = players[playerId];
-				player.roundScore = Constants.POINTS_FOR_RANK.get(rank);
+				player.roundScore = refScores[rank-1];
 				player.totalScore = totalPoints[playerId] + player.roundScore;
 				rank--;
 			}
@@ -216,7 +235,7 @@ public abstract class AbstractRoundPanel extends JPanel implements Runnable
 			for(Player player: players)
 			{	int playerId = player.playerId;
 				if(!prevEliminated.contains(playerId))
-				{	player.roundScore = Constants.POINTS_FOR_RANK.get(rank);
+				{	player.roundScore = refScores[rank-1];
 					player.totalScore = totalPoints[playerId] + player.roundScore;
 				}
 			}
@@ -290,8 +309,8 @@ public abstract class AbstractRoundPanel extends JPanel implements Runnable
 		eliminatedBy = new Integer[snakes.length];
 		for(int i=0;i<snakes.length;i++)
 		{	eliminatedBy[i] = snakes[i].eliminatedBy;
-			System.out.print(" "+eliminatedBy[i]);
+			//System.out.print(" "+eliminatedBy[i]);
 		}
-		System.out.println();
+//		System.out.println();
 	}
 }

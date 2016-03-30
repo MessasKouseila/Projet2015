@@ -19,7 +19,8 @@ package fr.univavignon.courbes.network.simpleimpl;
  */
 
 /**
- * Cette classe contient uniquement des constantes utilisées par le moteur réseau.
+ * Cette classe contient uniquement des constantes utilisées par l'implémentation
+ * à base de socket standard du Moteur Réseau.
  * 
  * @author	L3 Info UAPV 2015-16
  */

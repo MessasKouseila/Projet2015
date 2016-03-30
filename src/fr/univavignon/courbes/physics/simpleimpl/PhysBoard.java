@@ -36,6 +36,7 @@ import fr.univavignon.courbes.common.Position;
 import fr.univavignon.courbes.common.SmallUpdate;
 import fr.univavignon.courbes.common.Snake;
 import fr.univavignon.courbes.inter.simpleimpl.SettingsManager;
+import fr.univavignon.courbes.sounds.Sound;
 
 /**
  * Classe fille de {@link Board}, permettant d'intégrer
@@ -232,7 +233,12 @@ public class PhysBoard extends Board
 		if(totalTime <= Constants.PRESENTATION_DURATION)
 			state = State.PRESENTATION;
 		else if(totalTime <= Constants.PRESENTATION_DURATION+Constants.ENTRANCE_DURATION)
+		{
 			state = State.ENTRANCE;
+			if(!Sound.MusicInGame.isPlaying())
+				Sound.MusicInGame.playLoop();
+		}
+
 		else
 			state = State.REGULAR;
 	}
@@ -278,6 +284,8 @@ public class PhysBoard extends Board
 			{	items.add(item);
 				// on ajoute le nouvel item dans l'objet de mise à jour
 				smallUpdate.newItem = new PhysItemInstance(item);
+				// on lance le son d'apparition de l'item
+				Sound.ItemSpawn.play();
 			}
 		}
 	}

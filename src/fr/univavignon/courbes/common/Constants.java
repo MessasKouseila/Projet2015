@@ -136,23 +136,22 @@ public class Constants
 	////	POINTS
 	////////////////////////////////////////////////////////////////
 	/** Points marqués par les joueurs à l'issue d'une manche, en fonction de leur classement */
-	public static final Map<Integer,Integer> POINTS_FOR_RANK = new HashMap<Integer,Integer>();
+	public static final Map<Integer,int[]> POINTS_FOR_RANK = new HashMap<Integer,int[]>();
 	static
-	{	POINTS_FOR_RANK.put(1,5); //TODO points à confirmer sur le jeu original
-		POINTS_FOR_RANK.put(2,4);
-		POINTS_FOR_RANK.put(3,3);
-		POINTS_FOR_RANK.put(4,2);
-		POINTS_FOR_RANK.put(5,1);
-		POINTS_FOR_RANK.put(6,0);
+	{	POINTS_FOR_RANK.put(2, new int[] {1,0});
+		POINTS_FOR_RANK.put(3, new int[] {2,1,0});
+		POINTS_FOR_RANK.put(4, new int[] {3,2,1,0});
+		POINTS_FOR_RANK.put(5, new int[] {4,3,2,1,0});
+		POINTS_FOR_RANK.put(6, new int[] {5,4,3,2,1,0});
 	}
 	/** Limite de points à atteindre */
 	public static final Map<Integer,Integer> POINT_LIMIT_FOR_PLAYER_NBR = new HashMap<Integer,Integer>();
 	static
-	{	POINT_LIMIT_FOR_PLAYER_NBR.put(2,35);
-		POINT_LIMIT_FOR_PLAYER_NBR.put(3,35);
-		POINT_LIMIT_FOR_PLAYER_NBR.put(4,35);
-		POINT_LIMIT_FOR_PLAYER_NBR.put(5,35);
-		POINT_LIMIT_FOR_PLAYER_NBR.put(6,35);
+	{	POINT_LIMIT_FOR_PLAYER_NBR.put(2,10);
+		POINT_LIMIT_FOR_PLAYER_NBR.put(3,20);
+		POINT_LIMIT_FOR_PLAYER_NBR.put(4,30);
+		POINT_LIMIT_FOR_PLAYER_NBR.put(5,40);
+		POINT_LIMIT_FOR_PLAYER_NBR.put(6,50);
 	}
 	
 	////////////////////////////////////////////////////////////////
@@ -162,4 +161,6 @@ public class Constants
 	public static final String DEFAULT_IP = "localhost";//60010;//453;
 	/** Port TCP par défaut */
 	public static final int DEFAULT_PORT = 9999;//60010;//453;
+	/** Liste des préfixes d'adresses IP acceptées par le Moteur Réseau */
+	public static final String[] IP_PREFIXES = {"192.168.","10.104.","194.57."};
 }

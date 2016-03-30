@@ -189,7 +189,7 @@ public abstract class AbstractLocalPlayerSelectionPanel extends AbstractPlayerSe
 	
 	@Override
 	protected void comboboxChanged()
-	{	int oldPlayerNbr = selectedProfiles.size();
+	{   int oldPlayerNbr = selectedProfiles.size();
 		int newPlayerNbr = (int) playerNbrCombo.getSelectedItem();
 		
 		if(oldPlayerNbr<newPlayerNbr)

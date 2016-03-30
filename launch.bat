@@ -26,8 +26,7 @@
 	Set launcher=fr.univavignon.courbes.Launcher
 
 :: launch the game
-	java -Xmx512m -classpath %cp% %launcher%
-
+	java -Xmx512m -Djava.ext.dirs=lib -classpath %cp% %launcher% 
 :: 	pause
 
 	Endlocal

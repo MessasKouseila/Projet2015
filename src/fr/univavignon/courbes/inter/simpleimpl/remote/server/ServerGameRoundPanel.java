@@ -146,6 +146,8 @@ public class ServerGameRoundPanel extends AbstractRoundPanel implements ServerGa
 					if(finished)
 					{	finalCount = 1;
 						updatedEliminatedBy();
+						
+						
 					}
 				}
 				phyUpdateNbr++;
@@ -199,7 +201,7 @@ public class ServerGameRoundPanel extends AbstractRoundPanel implements ServerGa
 		serverCom.sendRound(round);
 		
 		// on vide le buffer des màj qui y sont encore stockées
-		while(serverCom.retrieveCommands()!=null);
+		serverCom.finalizeRound();
 		
 		// on attend que les clients soient prêts (attente passive)
 		while(readyClientNbr<clientIndices.size())
@@ -214,7 +216,8 @@ public class ServerGameRoundPanel extends AbstractRoundPanel implements ServerGa
 	
 	@Override
 	public synchronized void fetchAcknowledgment(int index)
-	{	readyClientNbr++;
+	{	
+		readyClientNbr++;
 		notify();
 	}
 	

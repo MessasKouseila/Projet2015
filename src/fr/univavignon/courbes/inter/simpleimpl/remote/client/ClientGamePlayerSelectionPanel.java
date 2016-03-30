@@ -126,15 +126,21 @@ public class ClientGamePlayerSelectionPanel extends AbstractLocalPlayerSelection
 	
 	@Override
 	protected void nextStep()
-	{	if(checkConfiguration())
-	{		Player player = selectedProfiles.get(0).player;
+	{	
+		Player player;
+		if(checkConfiguration())
+	{		player = selectedProfiles.get(0).player;
+				
 			mainWindow.clientPlayer = player;
 			// connexion directe
-			if(publicBox.isSelected())
+			if(publicBox.isSelected()){
 				mainWindow.displayPanel(PanelName.CLIENT_GAME_CONNECTION);
+				mainWindow.serverCentralCom.setGameDirect(true);
 			// connexion via le central
-			else
-			{	System.out.println("Fonctionnalité pas encore implémentée");
+			}else{	
+				System.out.println("Fonctionnalité pas encore implémentée ");
+				mainWindow.displayPanel(PanelName.CLIENT_GAME_WAIT_CENTRAL);
+				mainWindow.serverCentralCom.setGameDirect(false);
 				// TODO à compléter avec le traitement relatif au serveur central :
 				// il faut afficher un panel qui va se connecter au central et faire le traitement approprié
 				//mainWindow.displayPanel(PanelName.XXXXXXXXXX);

@@ -32,6 +32,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -51,6 +52,8 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 	private static final long serialVersionUID = 1L;
 	/** Nom par défaut pour le champ texte */
 	private static final String DEFAULT_NAME = "Nom";
+	/** mot de passe par défaut pour le champ mot de passe */
+	private static final String DEFAULT_PASSWORD = "Mot de passe";
 	/** Pays par défaut pour le champ texte */
 	private static final String DEFAULT_COUNTRY = "Pays";
 	
@@ -75,6 +78,8 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 	private JScrollPane scrollPane; 
 	/** Champ texte contenant le nom d'un nouveau profil */
 	private JTextField nameField;
+	/** Champ mot de passe contenant le mot de passe d'un nouveau profil */
+	private JPasswordField passwordField;
 	/** Champ texte contenant le pays d'un nouveau profil */
 	private JTextField countryField;
 	/** Bouton pour revenir au menu principal */
@@ -140,7 +145,14 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 		nameField.setMaximumSize(dim);
 		nameField.setMinimumSize(dim);
 		add(nameField);
-
+		
+		passwordField = new JPasswordField();
+		passwordField.addFocusListener(this);
+		passwordField.setPreferredSize(dim);
+		passwordField.setMaximumSize(dim);
+		passwordField.setMinimumSize(dim);
+		add(passwordField);
+		
 		countryField = new JTextField(DEFAULT_COUNTRY);
 		countryField.addFocusListener(this);
 		countryField.setPreferredSize(dim);
@@ -182,17 +194,21 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 	private void addPlayer()
 	{	String userName = nameField.getText();
 		String country = countryField.getText();
-
+		
+		// on crée le profil
+		Profile profile = new Profile();
+		profile.userName = userName;
+		profile.country = country;
+		profile.eloRank = 800;
+		profile.password = passwordField.getText();
+		profile.email = "none@gmail.com";
 		// on vérifie que les champs ont été remplis, et que le nom n'est pas déjà pris
-		if(!userName.isEmpty() && !country.isEmpty() && !ProfileManager.containsUserName(userName))
-		{	// on crée le profil
-			Profile profile = new Profile();
-			profile.userName = userName;
-			profile.country = country;
-			profile.eloRank = ProfileManager.getProfiles().size()+1;
-			
+		if(!userName.isEmpty() && !country.isEmpty() 
+				&& !ProfileManager.containsUserName(userName) && mainWindow.serverCentralCom.createProfile(profile))
+		{	profile.password = null;
 			// on le rajoute à la liste
 			ProfileManager.addProfile(profile);
+			
 			
 			// on le rajoute dans la table
 			ProfileTableModel model = (ProfileTableModel) playerTable.getModel();
@@ -201,8 +217,12 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 			// on réinitialise les champs texte
 			nameField.setText(DEFAULT_NAME);
 			countryField.setText(DEFAULT_COUNTRY);
+			mainWindow.displayNotification("L'utilisateur a été ajouté avec succès");
+		}else{
+			mainWindow.displayError("l'utilisateur existe déja");
 		}
 	}
+	
 	
 	/**
 	 * Suppression d'un profil existant.
@@ -214,13 +234,15 @@ public class ProfileListPanel extends JPanel implements ActionListener, FocusLis
 		{	// on récupère le profil
 			List<Profile> profiles = new ArrayList<Profile>(ProfileManager.getProfiles());
 			Profile profile = profiles.get(selected);
-			
-			// on supprime le profil de la liste
-			ProfileManager.removeProfile(profile);
-			
-			// on le supprime de la table
-			ProfileTableModel model = (ProfileTableModel) playerTable.getModel();
-			model.removeProfile(selected);
+			if(mainWindow.serverCentralCom.deletePlayer(profile.userName)){
+				// on supprime le profil de la liste
+				ProfileManager.removeProfile(profile);
+				
+				// on le supprime de la table
+				ProfileTableModel model = (ProfileTableModel) playerTable.getModel();
+				model.removeProfile(selected);
+			}else
+				mainWindow.displayError("Erreur lors de la suppression du joueur");
 		}
 	}
 	
